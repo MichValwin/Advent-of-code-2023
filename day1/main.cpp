@@ -31,8 +31,7 @@ uint32_t getSilver(std::vector<std::string>& lines) {
 }
 
 uint32_t getGold(std::vector<std::string>& lines) {
-    const std::string lookAtTableNumbs[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
-    const std::string lookAtTableString[] = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
+    const static std::string lookAtTableString[] = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
     
     uint32_t gold = 0;
     for(std::string& line: lines) {
