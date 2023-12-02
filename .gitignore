@@ -17,3 +17,7 @@ _deps
 
 # Executables
 *_exec
+
+# Other
+*.class
+bigboy.txt
