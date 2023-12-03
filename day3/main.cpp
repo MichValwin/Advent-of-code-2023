@@ -1,18 +1,9 @@
-#include <cctype>
-#include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <sys/types.h>
 #include <vector>
-#include <cstdio>
-#include <cstdlib>
 #include <set>
-#include <unordered_set>
-#include <queue>
-#include <filesystem>
-#include <algorithm>
 
 static const char* INPUT_FILE = "input.txt";
 static const char* DEMO_FILE = "demo.txt";
