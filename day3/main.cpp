@@ -160,10 +160,11 @@ int main() {
     
     // Get width and height
     std::string line;
+    if(std::getline(inputFile, line)) width = line.length();
     while(std::getline(inputFile, line)) {
-        if(width < line.length())width = line.length();
         height++;
     }
+    height++;
 
     map = new char[width*height];
     
