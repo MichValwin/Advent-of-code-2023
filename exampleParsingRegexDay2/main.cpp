@@ -40,14 +40,6 @@ struct Game {
     std::vector<SubsetCubes> subsets;
 };
 
-enum class Color {
-    red, green, blue
-};
-
-void ltrim(std::string& str) {
-    if(str[0] == ' ')str.erase(0, 1);
-}
-
 uint32_t getSilver(std::vector<Game>& games, SubsetCubes& possible) {
     std::vector<uint32_t> gameIDPossible;
 
