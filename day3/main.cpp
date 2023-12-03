@@ -30,16 +30,11 @@ void printMap(const char* map, uint32_t width, uint32_t height) {
 struct Position {
     uint32_t x;
     uint32_t y;
-    // compare for order.     
-    bool operator <(const Position& pt) const {
-        return (x < pt.x) || ((!(pt.x < x)) && (y < pt.y));
+    // Compare for order.    
+    bool operator <(const Position& pOther) const {
+        return (x < pOther.x) || ((!(pOther.x < x)) && (y < pOther.y));
     }
 };
-
-bool comparePositionNums(const Position& p1, const Position& p2) {
-    return p1.x < p2.x;
-}
-
 
 bool isPositionCorrect(const Position& p, uint32_t w, uint32_t h) {
     if(p.x < w && p.y < h)return true;
@@ -84,6 +79,16 @@ std::vector<uint32_t> getNumbersFromPositions(std::set<Position> posNumTouching,
     return numResult;
 }
 
+struct PosOffset {
+    int x;
+    int y;
+};
+
+const PosOffset OFFSETS_TO_CHECK[] = {
+    {-1,-1}, {0,-1}, {1,-1},
+    {-1,0},  {1,0},
+    {-1,1}, {0,1}, {1,1}
+}; 
 
 uint32_t getSilver(const char* map, uint32_t width, uint32_t height) {
     std::set<Position> numTouchingSymbols;
@@ -91,12 +96,11 @@ uint32_t getSilver(const char* map, uint32_t width, uint32_t height) {
     for(uint32_t y = 0; y < height; y++) {
         for(uint32_t x = 0; x < width; x++) {
             if(!std::isdigit(map[x + width*y]) && map[x + width*y] != '.') {
-                for(int l = -1; l <= 1; l++) {
-                    for(int u = -1; u <= 1; u++) {
-                        Position posSearch = {x+l, y+u};
-                        if(isPositionCorrect(posSearch, width, height) && std::isdigit(map[posSearch.x + width*posSearch.y])) {
-                            numTouchingSymbols.insert (posSearch);
-                        }
+                
+                for(uint8_t i = 0; i < 8; i++) {
+                    Position posSearch = {x+OFFSETS_TO_CHECK[i].x, y+OFFSETS_TO_CHECK[i].y};
+                    if(isPositionOfANumber(posSearch, map, width, height)) {
+                        numTouchingSymbols.insert (posSearch);
                     }
                 }
             }
@@ -112,24 +116,20 @@ uint32_t getSilver(const char* map, uint32_t width, uint32_t height) {
     return sum;
 }
 
-
-
-
 uint64_t getGold(const char* map, uint32_t width, uint32_t height) {
+    
     uint64_t gold = 0;
-
+    
     // Get all positions touching a gear
     for(uint32_t y = 0; y < height; y++) {
         for(uint32_t x = 0; x < width; x++) {
             if(map[x + width*y] == '*') {
                 std::set<Position> posNumbersTouchingGears;
 
-                for(int l = -1; l <= 1; l++) {
-                    for(int u = -1; u <= 1; u++) {
-                        Position posSearch = {x+l, y+u};
-                        if(isPositionCorrect(posSearch, width, height) && std::isdigit(map[posSearch.x + width*posSearch.y])) {
-                            posNumbersTouchingGears.insert(posSearch); 
-                        }
+                for(uint8_t i = 0; i < 8; i++) {
+                    Position posSearch = {x+OFFSETS_TO_CHECK[i].x, y+OFFSETS_TO_CHECK[i].y};
+                    if(isPositionCorrect(posSearch, width, height) && std::isdigit(map[posSearch.x + width*posSearch.y])) {
+                        posNumbersTouchingGears.insert(posSearch); 
                     }
                 }
                 std::vector<uint32_t> numsTouching = getNumbersFromPositions(posNumbersTouchingGears, map, width, height);
@@ -178,7 +178,7 @@ int main() {
         y++;
     }
 
-    printMap(map, width, height);
+    //printMap(map, width, height);
 
 
     std::cout << "Silver: " << getSilver(map, width, height) << "\n";
