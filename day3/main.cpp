@@ -18,22 +18,6 @@ static const char* INPUT_FILE = "input.txt";
 static const char* DEMO_FILE = "demo.txt";
 static const bool USE_REAL_DATA = true;
 
-// Helpers
-std::vector<std::string> splitString(const std::string& str, const std::string& delimiter) {
-    std::vector<std::string> strings;
-
-    int start = 0;
-    int end = str.find(delimiter);
-    while (end != -1) {
-        strings.push_back(str.substr(start, end - start));
-        start = end + delimiter.size();
-        end = str.find(delimiter, start);
-    }
-    strings.push_back(str.substr(start, end - start));
-
-    return strings;
-}
-
 void printMap(const char* map, uint32_t width, uint32_t height) {
     for(uint32_t y = 0; y < height; y++) {
         for(uint32_t x = 0; x < width; x++) {
@@ -62,6 +46,45 @@ bool isPositionCorrect(const Position& p, uint32_t w, uint32_t h) {
     return false;
 }
 
+Position getFirstPosNumber(const Position& p, const char* map, uint32_t width, uint32_t height) {
+    Position firstPosNum = p;
+    Position left =  {firstPosNum.x-1, firstPosNum.y};
+    while(isPositionCorrect(left, width, height) && std::isdigit(map[left.x + width*left.y])) {
+        firstPosNum = left;
+        left =  {firstPosNum.x-1, firstPosNum.y};
+    }
+    return firstPosNum;
+}
+
+bool isPositionOfANumber(const Position& p, const char* map, uint32_t width, uint32_t height) {
+    return isPositionCorrect(p, width, height) && std::isdigit(map[p.x + width*p.y]);
+}
+
+std::vector<uint32_t> getNumbersFromPositions(std::set<Position> posNumTouching, const char* map, uint32_t width, uint32_t height) {
+    std::vector<uint32_t> numResult;
+
+    std::set<Position> positionNumsProcessed;
+    for(const Position& pos: posNumTouching) {
+        auto it = positionNumsProcessed.find(pos);
+        if(it != positionNumsProcessed.end()) {
+            continue;
+        }
+
+        Position p = getFirstPosNumber(pos, map, width, height);
+      
+        std::string num = "";
+        while(isPositionOfANumber(p, map, width, height)) {
+            positionNumsProcessed.insert(p);
+            num += map[p.x + width*p.y];
+            p.x++;
+        }
+        numResult.push_back(std::atoi(num.c_str()));
+    }
+
+    return numResult;
+}
+
+
 uint32_t getSilver(const char* map, uint32_t width, uint32_t height) {
     std::set<Position> numTouchingSymbols;
     // Get all positions of numbers that are touching a symbol
@@ -80,121 +103,17 @@ uint32_t getSilver(const char* map, uint32_t width, uint32_t height) {
         }
     }
 
-    std::vector<std::vector<Position>> positionsWNumbersLined;
-
-    std::vector<std::string> numberStrs;
-
-    std::queue<Position> numQueue;
-    std::set<Position> positionNumsProcessed;
-    for(const Position& pos: numTouchingSymbols) {
-        
-        auto it = positionNumsProcessed.find(pos);
-        if(it == positionNumsProcessed.end()) {
-            numQueue.push(pos);
-        }
-
-        std::vector<Position> posLined;
-        while(!numQueue.empty()) {
-            Position numPos = numQueue.front();
-            numQueue.pop();
-
-            auto it2 = positionNumsProcessed.find(numPos);
-            if(it2 == positionNumsProcessed.end()) {
-                // if it has not been processed
-                positionNumsProcessed.insert(numPos);
-
-                //num += map[numPos.x + numPos.y * width];
-                posLined.push_back(numPos);
-                // check if there is a number on the left
-                Position left = {numPos.x-1, numPos.y};
-                if(isPositionCorrect(left, width, height) && std::isdigit(map[left.x + width*left.y])) {
-                    numQueue.push(left);
-                }
-                // check if there is a number on the right
-                Position right = {numPos.x+1, numPos.y};
-                if(isPositionCorrect(right, width, height) && std::isdigit(map[right.x + width*right.y])) {
-                    numQueue.push(right);
-                }
-            }
-
-        }
-
-        std::sort(posLined.begin(), posLined.end(), comparePositionNums);
-        positionsWNumbersLined.push_back(posLined);
-        std::string numStr = "";
-        for(const Position& p: posLined) {
-            numStr += map[p.x + p.y*width]; 
-        }
-        numberStrs.push_back(numStr);
-    }
-
-
+    std::vector<uint32_t> numbersFromPositions = getNumbersFromPositions(numTouchingSymbols, map, width, height);
 
     uint32_t sum = 0;
-    for(const std::string& str: numberStrs) {
-        //std::cout << str << "\n";
-        sum += std::atoi(str.c_str());
+    for(uint32_t n: numbersFromPositions) {
+        sum += n;
     }
     return sum;
 }
 
-std::vector<uint32_t> numbersFromPositions(std::set<Position> posNumbersTouchingGears, const char* map, uint32_t width, uint32_t height) {
-    std::vector<uint32_t> posN;
 
-    std::vector<std::vector<Position>> positionsWNumbersLined;
 
-    std::vector<std::string> numberStrs;
-
-    std::queue<Position> numQueue;
-    std::set<Position> positionNumsProcessed;
-    for(const Position& pos: posNumbersTouchingGears) {
-        
-        auto it = positionNumsProcessed.find(pos);
-        if(it == positionNumsProcessed.end()) {
-            numQueue.push(pos);
-        }
-
-        std::vector<Position> posLined;
-        while(!numQueue.empty()) {
-            Position numPos = numQueue.front();
-            numQueue.pop();
-
-            auto it2 = positionNumsProcessed.find(numPos);
-            if(it2 == positionNumsProcessed.end()) {
-                // if it has not been processed
-                positionNumsProcessed.insert(numPos);
-
-                //num += map[numPos.x + numPos.y * width];
-                posLined.push_back(numPos);
-                // check if there is a number on the left
-                Position left = {numPos.x-1, numPos.y};
-                if(isPositionCorrect(left, width, height) && std::isdigit(map[left.x + width*left.y])) {
-                    numQueue.push(left);
-                }
-                // check if there is a number on the right
-                Position right = {numPos.x+1, numPos.y};
-                if(isPositionCorrect(right, width, height) && std::isdigit(map[right.x + width*right.y])) {
-                    numQueue.push(right);
-                }
-            }
-
-        }
-
-        std::sort(posLined.begin(), posLined.end(), comparePositionNums);
-        positionsWNumbersLined.push_back(posLined);
-        std::string numStr = "";
-        for(const Position& p: posLined) {
-            numStr += map[p.x + p.y*width]; 
-        }
-        numberStrs.push_back(numStr);
-    }
-
-    for(const std::string& str: numberStrs) {
-        uint32_t num = std::atoi(str.c_str());
-        if(num != 0)posN.push_back(num);
-    }
-    return posN;
-}
 
 uint64_t getGold(const char* map, uint32_t width, uint32_t height) {
     uint64_t gold = 0;
@@ -203,9 +122,6 @@ uint64_t getGold(const char* map, uint32_t width, uint32_t height) {
     for(uint32_t y = 0; y < height; y++) {
         for(uint32_t x = 0; x < width; x++) {
             if(map[x + width*y] == '*') {
-
-
-
                 std::set<Position> posNumbersTouchingGears;
 
                 for(int l = -1; l <= 1; l++) {
@@ -216,13 +132,11 @@ uint64_t getGold(const char* map, uint32_t width, uint32_t height) {
                         }
                     }
                 }
-                std::vector<uint32_t> numsTouching = numbersFromPositions(posNumbersTouchingGears, map, width, height);
+                std::vector<uint32_t> numsTouching = getNumbersFromPositions(posNumbersTouchingGears, map, width, height);
                 
                 if(numsTouching.size() == 2) {
                     gold += numsTouching[0] * numsTouching[1];
                 }
-
-
             }
         }
     }
@@ -267,7 +181,7 @@ int main() {
     printMap(map, width, height);
 
 
-    //std::cout << "Silver: " << getSilver(map, width, height) << "\n";
+    std::cout << "Silver: " << getSilver(map, width, height) << "\n";
     std::cout << "Gold: " << getGold(map, width, height) << "\n";
     return 0;
 }
