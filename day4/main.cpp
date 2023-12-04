@@ -77,9 +77,14 @@ uint32_t getGold(const std::vector<Card>& cards) {
     std::vector<uint32_t> instancesCards(cards.size());
     for(uint32_t i = 0; i < cards.size(); i++)instancesCards[i] = 1;
 
+    std::vector<uint32_t> matchesPreComputed;
+    for(const Card& card: cards) {
+        matchesPreComputed.push_back(getMatchesCard(card));
+    }
+
     for(uint32_t i = 0; i < cards.size(); i++) {
         for(uint32_t numInst = 0; numInst < instancesCards[i]; numInst++) {
-            uint32_t matches = getMatchesCard(cards[i]);
+            uint32_t matches = matchesPreComputed[i];
 
             for(uint32_t j = 0; j < matches; j++){
                 instancesCards[i+1+j]++;
