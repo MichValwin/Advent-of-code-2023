@@ -14,23 +14,17 @@ static const char* DEMO_FILE = "demo.txt";
 static const bool USE_REAL_DATA = true;
 
 // Helpers
-struct SplitString {
-    std::string delimiter;
+std::vector<std::string> splitString(const std::string &str, const std::string &delimiter) {
     std::vector<std::string> strings;
-};
-
-SplitString splitString(const std::string &str, const std::string &delimiter) {
-    SplitString strings;
-    strings.delimiter = delimiter;
 
     int start = 0;
     int end = str.find(delimiter);
     while (end != -1) {
-        strings.strings.push_back(str.substr(start, end - start));
+        strings.push_back(str.substr(start, end - start));
         start = end + delimiter.size();
         end = str.find(delimiter, start);
     }
-    strings.strings.push_back(str.substr(start, end - start));
+    strings.push_back(str.substr(start, end - start));
 
     return strings;
 }
@@ -116,21 +110,21 @@ int main() {
     // Parse
     std::string line;
     while(std::getline(inputFile, line)) {
-        std::vector<std::string> gameLine = splitString(line, ":").strings;
+        std::vector<std::string> gameLine = splitString(line, ":");
         uint32_t gameId;
         std::sscanf(gameLine[0].c_str(), "%*s %d", &gameId);
 
         // Get subsets
-        std::vector<std::string> subsets = splitString(gameLine[1], ";").strings;
+        std::vector<std::string> subsets = splitString(gameLine[1], ";");
         std::vector<SubsetCubes> subs;
         for(size_t i = 0; i < subsets.size(); i++) {
             // Get each color in subset
-            std::vector<std::string> eachColor = splitString(subsets[i], ",").strings;
+            std::vector<std::string> eachColor = splitString(subsets[i], ",");
             SubsetCubes subset = {0,0,0};
 
             for(std::string& colorStr: eachColor) { 
                 ltrim(colorStr);
-                uint32_t quantity = std::atoi(splitString(colorStr, " ").strings[0].c_str());
+                uint32_t quantity = std::atoi(splitString(colorStr, " ")[0].c_str());
 
                 //std::sscanf(colorStr.c_str(), "%d %20s%n", &quantity);
                 if(colorStr.find("red") != std::string::npos) {

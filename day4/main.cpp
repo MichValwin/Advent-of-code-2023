@@ -8,7 +8,7 @@
 #include <regex>
 #include <cmath>
 
-static const char* INPUT_FILE = "input.txt";
+static const char* INPUT_FILE = "bigboy.txt";
 static const char* DEMO_FILE = "demo.txt";
 static const bool USE_REAL_DATA = true;
 

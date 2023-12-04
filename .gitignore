@@ -21,3 +21,6 @@ _deps
 # Other
 *.class
 bigboy.txt
+input.txt
+demo.txt
+*.java
