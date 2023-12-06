@@ -34,26 +34,43 @@ vector<std::string> splitString(const string &str, const string &delimiter) {
 }
 
 struct Race {
-    uint64_t time;
-    uint64_t distance;
+    int64_t time;
+    int64_t distance;
 };
 
 struct IntervalWin {
-    uint64_t minPressed;
-    uint64_t maxPressed;
+    int64_t minPressed;
+    int64_t maxPressed;
 };
 
-bool canWin(const Race& race, uint64_t timePressing) {
+bool canWin(const Race& race, int64_t timePressing) {
     int64_t timeRemaining = race.time - timePressing;
-    if(timeRemaining <= 0)return false;
     if(timePressing*timeRemaining > race.distance)return true;
     return false;
 }
 
-uint64_t getGold(const Race& race) {
+double solveQuadratic(double a, double b, double c, bool sign) {
+    double sq = sqrt(pow(b,2) -4.0*a*c);
+    if(sign) {
+        return (-b + sq)/(2*a);
+    }else{
+        return (-b - sq)/(2*a);
+    }
+}
+
+int64_t getWinsQuadratic(const Race& race) {
+
+    int64_t lower = ceil(solveQuadratic(-1, race.time, -race.distance, true));
+    int64_t high = floor(solveQuadratic(-1, race.time, -race.distance, false));
+
+    int64_t wins = high - lower +1;
+    return wins; 
+}
+
+int64_t getGold(const Race& race) {
     IntervalWin intervalWinning = {0, 0};
     // Get min time winning
-    for(uint64_t timePressing = 1; timePressing < race.time; timePressing++) {
+    for(int64_t timePressing = 1; timePressing < race.time; timePressing++) {
         if(canWin(race, timePressing)) {
             intervalWinning.minPressed = timePressing;
             break;
@@ -61,33 +78,28 @@ uint64_t getGold(const Race& race) {
     }
 
     // Get max time winning
-    for(uint64_t timePressing = race.time-1; timePressing > 0; timePressing--) {
+    for(int64_t timePressing = race.time-1; timePressing > 0; timePressing--) {
         if(canWin(race, timePressing)) {
             intervalWinning.maxPressed = timePressing;
             break;
         }
     }
 
-    uint64_t wins = intervalWinning.maxPressed - intervalWinning.minPressed + 1;
+    int64_t wins = intervalWinning.maxPressed - intervalWinning.minPressed + 1;
     return wins;
 }
 
-uint64_t getSilver(const vector<Race>& races) {
-    uint64_t silver = 0;
-    vector<uint64_t> winsTotal;
+int64_t getSilver(const vector<Race>& races) {
+    int64_t silver = 1;
 
-    for(uint64_t i = 0; i < races.size(); i++) {
-        uint64_t wins = 0;
-        for(uint64_t timePressing = 1; timePressing < races[i].time-1; timePressing++) {
+    for(size_t i = 0; i < races.size(); i++) {
+        int64_t wins = 0;
+        for(int64_t timePressing = 1; timePressing < races[i].time-1; timePressing++) {
             if(canWin(races[i], timePressing))wins++;
         }
-        winsTotal.push_back(wins);
+        silver *= wins;
     }
 
-    silver = winsTotal[0];
-    for(uint64_t i = 1; i < winsTotal.size(); i++) {
-        silver *= winsTotal[i];
-    }
     return silver;
 }
 
@@ -112,12 +124,12 @@ int main() {
     
     std::vector<Race> racesSilver;
     for(const string& time: timesRaces) {
-        if(!time.empty())racesSilver.push_back({(uint64_t)atol(time.c_str()), 0});
+        if(!time.empty())racesSilver.push_back({(int64_t)atol(time.c_str()), 0});
     }
     int i = 0;
     for(const string& distance: distanceRaces) {
         if(!distance.empty()) {
-            racesSilver[i].distance = (uint64_t)atol(distance.c_str());
+            racesSilver[i].distance = (int64_t)atol(distance.c_str());
             i++;
         }
     }
@@ -130,12 +142,12 @@ int main() {
     for(const string& distance: distanceRaces) {
         if(!distance.empty())distanceTotal += distance;
     }
-    Race raceGold = {(uint64_t)atol(timeTotal.c_str()), (uint64_t)atol(distanceTotal.c_str())};
+    Race raceGold = {(int64_t)atol(timeTotal.c_str()), (int64_t)atol(distanceTotal.c_str())};
 
 
     //Debug
     /*
-    for(uint64_t i = 0; i < racesSilver.size(); i++) {
+    for(int64_t i = 0; i < racesSilver.size(); i++) {
         cout << "Race " << i+1 << "{ t:" << racesSilver[i].time << ", d:" << racesSilver[i].distance << " }\n"; 
     }
     cout << "Race Gold: " << "{t: " << raceGold.time << ", d: " << raceGold.distance << "}\n"; 
@@ -143,5 +155,6 @@ int main() {
 
     cout << "Silver: " << getSilver(racesSilver) << "\n";
     cout << "Gold: "  << getGold(raceGold) << "\n";
+    cout << "Gold Quadratic: " << getWinsQuadratic(raceGold) << "\n";
     return 0;
 }
