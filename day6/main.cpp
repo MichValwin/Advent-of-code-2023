@@ -38,11 +38,38 @@ struct Race {
     uint64_t distance;
 };
 
+struct IntervalWin {
+    uint64_t minPressed;
+    uint64_t maxPressed;
+};
+
 bool canWin(const Race& race, uint64_t timePressing) {
     int64_t timeRemaining = race.time - timePressing;
     if(timeRemaining <= 0)return false;
     if(timePressing*timeRemaining > race.distance)return true;
     return false;
+}
+
+uint64_t getGold(const Race& race) {
+    IntervalWin intervalWinning = {0, 0};
+    // Get min time winning
+    for(uint64_t timePressing = 1; timePressing < race.time; timePressing++) {
+        if(canWin(race, timePressing)) {
+            intervalWinning.minPressed = timePressing;
+            break;
+        }
+    }
+
+    // Get max time winning
+    for(uint64_t timePressing = race.time-1; timePressing > 0; timePressing--) {
+        if(canWin(race, timePressing)) {
+            intervalWinning.maxPressed = timePressing;
+            break;
+        }
+    }
+
+    uint64_t wins = intervalWinning.maxPressed - intervalWinning.minPressed + 1;
+    return wins;
 }
 
 uint64_t getSilver(const vector<Race>& races) {
@@ -62,25 +89,6 @@ uint64_t getSilver(const vector<Race>& races) {
         silver *= winsTotal[i];
     }
     return silver;
-}
-
-uint64_t getGoldSLOW(const Race& race) {
-    uint64_t gold = 0;
-    vector<uint64_t> winsTotal;
-
-  
-    uint64_t wins = 0;
-    for(uint64_t timePressing = 1; timePressing < race.time-1; timePressing++) {
-        if(canWin(race, timePressing))wins++;
-    }
-    winsTotal.push_back(wins);
-    
-
-    gold = winsTotal[0];
-    for(uint64_t i = 1; i < winsTotal.size(); i++) {
-        gold *= winsTotal[i];
-    }
-    return gold;
 }
 
 int main() {
@@ -126,13 +134,14 @@ int main() {
 
 
     //Debug
+    /*
     for(uint64_t i = 0; i < racesSilver.size(); i++) {
         cout << "Race " << i+1 << "{ t:" << racesSilver[i].time << ", d:" << racesSilver[i].distance << " }\n"; 
     }
     cout << "Race Gold: " << "{t: " << raceGold.time << ", d: " << raceGold.distance << "}\n"; 
-
+    */
 
     cout << "Silver: " << getSilver(racesSilver) << "\n";
-    cout << "Gold: "  << getGoldSLOW(raceGold) << "\n";
+    cout << "Gold: "  << getGold(raceGold) << "\n";
     return 0;
 }
