@@ -9,6 +9,7 @@
 #include <regex>
 #include <cmath>
 #include <unordered_map>
+#include <queue>
 
 using namespace std;
 
@@ -32,43 +33,43 @@ vector<std::string> splitString(const string &str, const string &delimiter) {
     return strings;
 }
 
-struct Bounds{
-    uint64_t min;
-    uint64_t max;
+struct Bound{
+    int64_t min;
+    int64_t max;
 };
 
 struct TotalBounds {
-    Bounds source;
-    Bounds destination;
+    Bound source;
+    Bound destination;
 };
 
 
 struct MapSourceDest {
-    Bounds source;
-    Bounds destination;
+    Bound source;
+    Bound destination;
 
     void print() const {
         cout << destination.min << " " << source.min << " " << (source.max - source.min) + 1;
     }
 };
 
-bool canMapDest(const MapSourceDest& map, uint64_t valDest) {
+bool canMapDest(const MapSourceDest& map, int64_t valDest) {
     if(valDest >= map.destination.min && valDest <= map.destination.max)return true;
     return false;
 }
 
-bool canMapSource(const MapSourceDest& map, uint64_t val) {
+bool canMapSource(const MapSourceDest& map, int64_t val) {
     if(val >= map.source.min && val <= map.source.max)return true;
     return false;
 }
 
-uint64_t mapValue(const MapSourceDest& map, uint64_t val) {
-    uint64_t offset = val - map.source.min;
+int64_t mapValue(const MapSourceDest& map, int64_t val) {
+    int64_t offset = val - map.source.min;
     return map.destination.min + offset;
 }
 
-uint64_t mapValueRev(const MapSourceDest& map, uint64_t val) {
-    uint64_t offset = val - map.destination.min;
+int64_t mapValueRev(const MapSourceDest& map, int64_t val) {
+    int64_t offset = val - map.destination.min;
     return map.source.min + offset;
 }
 
@@ -79,19 +80,19 @@ const string MAP_REVERSE[] = {"humidity-to-location", "temperature-to-humidity",
     "soil-to-fertilizer", "seed-to-soil"};
 
 
-uint64_t findLowest(const unordered_map<string, vector<MapSourceDest>>& maps, uint64_t seed) {
-    uint64_t valMapped = seed;
+int64_t findLowest(const unordered_map<string, vector<MapSourceDest>>& maps, int64_t seed) {
+    int64_t valMapped = seed;
 
     //cout << "seed: " << seed << "\n";
     for(const string& mapStr: MAP_ORDER) {
         vector<MapSourceDest> vecMaps = maps.at(mapStr);
 
-        uint64_t lowestCanMap = UINT64_MAX;
+        int64_t lowestCanMap = INT64_MAX;
         bool canBeMapped = false;
         for(const MapSourceDest& mapSourceDest: vecMaps) {
             if(canMapSource(mapSourceDest, valMapped)) {
                 canBeMapped = true;
-                uint64_t destValue = mapValue(mapSourceDest, valMapped);
+                int64_t destValue = mapValue(mapSourceDest, valMapped);
                 if(destValue < lowestCanMap)lowestCanMap = destValue;
             }
         }
@@ -108,19 +109,19 @@ uint64_t findLowest(const unordered_map<string, vector<MapSourceDest>>& maps, ui
     return valMapped;
 }
 
-uint64_t findLowestReverse(const unordered_map<string, vector<MapSourceDest>>& maps, uint64_t dest) {
-    uint64_t valMapped = dest;
+int64_t findLowestReverse(const unordered_map<string, vector<MapSourceDest>>& maps, int64_t dest) {
+    int64_t valMapped = dest;
 
     //cout << "dest: " << dest << "\n";
     for(const string& mapStr: MAP_REVERSE) {
         vector<MapSourceDest> vecMaps = maps.at(mapStr);
 
-        uint64_t lowestCanMap = UINT64_MAX;
+        int64_t lowestCanMap = INT64_MAX;
         bool canBeMapped = false;
         for(const MapSourceDest& mapSourceDest: vecMaps) {
             if(canMapDest(mapSourceDest, valMapped)) {
                 canBeMapped = true;
-                uint64_t destValue = mapValueRev(mapSourceDest, valMapped);
+                int64_t destValue = mapValueRev(mapSourceDest, valMapped);
                 if(destValue < lowestCanMap)lowestCanMap = destValue;
             }
         }
@@ -138,21 +139,21 @@ uint64_t findLowestReverse(const unordered_map<string, vector<MapSourceDest>>& m
 }
 
 // get lowest location number
-uint64_t getSilver(const unordered_map<string, vector<MapSourceDest>>& maps, const vector<uint64_t>& seeds) {
-    uint64_t lowest = UINT64_MAX;
+int64_t getSilver(const unordered_map<string, vector<MapSourceDest>>& maps, const vector<int64_t>& seeds) {
+    int64_t lowest = INT64_MAX;
 
-    for(uint64_t seed: seeds) {
-        uint64_t numLowestLocation = findLowest(maps, seed);
+    for(int64_t seed: seeds) {
+        int64_t numLowestLocation = findLowest(maps, seed);
         if(lowest > numLowestLocation) lowest = numLowestLocation;
     }
 
     return lowest;
 }
 
-uint64_t getGoldReverse(const unordered_map<string, vector<MapSourceDest>>& maps, const vector<Bounds>& seedRange) {
-    for(uint64_t dest = 0; dest < 1000000000; dest++) {
-        uint64_t seed = findLowestReverse(maps, dest);
-        for(const Bounds& boundsSeeds: seedRange) {
+int64_t getGoldReverse(const unordered_map<string, vector<MapSourceDest>>& maps, const vector<Bound>& seedRange) {
+    for(int64_t dest = 0; dest < 1000000000; dest++) {
+        int64_t seed = findLowestReverse(maps, dest);
+        for(const Bound& boundsSeeds: seedRange) {
             if(seed >= boundsSeeds.min && seed <= boundsSeeds.max) {
                 std::cout << "Gold on value "<< dest << " with seed: " << seed << "\n";
                 return seed;
@@ -160,10 +161,58 @@ uint64_t getGoldReverse(const unordered_map<string, vector<MapSourceDest>>& maps
         }
     }
 
-    return UINT64_MAX;
+    return INT64_MAX;
 }
 
+// (KEK, after reading various explanations later.)
+// We want to process all of the ranges, 
+int64_t getGold(const unordered_map<string, vector<MapSourceDest>>& maps, const vector<Bound>& seedRange) {
+    queue<Bound> beforeMap;
+    vector<Bound> afterMap;
+    for(const Bound& seedBound: seedRange)beforeMap.push(seedBound);
 
+
+    for(const string& mapStr: MAP_ORDER) {
+        vector<MapSourceDest> vecMaps = maps.at(mapStr);
+        
+        for(const Bound& d: afterMap)beforeMap.push(d);
+        afterMap.clear();
+
+        while(!beforeMap.empty()) {
+            Bound rangeToProc = beforeMap.front();
+            beforeMap.pop();
+
+            bool hasMapping = false;
+            for(const MapSourceDest& map: vecMaps) {
+                Bound intersection;
+                intersection.min = max(rangeToProc.min, map.source.min); // left side
+                intersection.max = min(rangeToProc.max, map.source.max); // Right side
+                if(intersection.min < intersection.max) { // Valid range
+                    hasMapping = true;
+                    // Add the range that coincides to "afterMap" Ad
+                    afterMap.push_back({mapValue(map, intersection.min), mapValue(map, intersection.max)});
+                    if(intersection.min > rangeToProc.min) {
+                        // Insert left segment for processing again
+                        beforeMap.push({rangeToProc.min, intersection.min});
+                    }
+                    if(intersection.max < rangeToProc.max) {
+                        // Insert right segment for processing again
+                        beforeMap.push({intersection.max, rangeToProc.max});
+                    }
+                    break;
+                }
+            }
+
+            // Direct mapping
+            if(!hasMapping)afterMap.push_back(rangeToProc);
+        }
+    }
+
+    int64_t min = INT64_MAX;
+    for(const Bound& b: afterMap) min = std::min(min, b.min);
+
+    return min;
+}
 
 
 int main() {
@@ -176,8 +225,8 @@ int main() {
         exit(0);
     }
     
-    vector<uint64_t> seeds;
-    vector<Bounds> seedRange;
+    vector<int64_t> seeds;
+    vector<Bound> seedRange;
     unordered_map<string, vector<MapSourceDest>> maps;
     unordered_map<string, TotalBounds> mapBounds;
     
@@ -189,15 +238,15 @@ int main() {
     for(const string& seed: seedsStr) {
         seeds.push_back(atoll(seed.c_str()));
     }
-    for(uint64_t i = 0; i < seedsStr.size(); i += 2) {
-        uint64_t min = atoll(seedsStr[i].c_str());
-        uint64_t max = min + atoll(seedsStr[i+1].c_str()) - 1;
+    for(size_t i = 0; i < seedsStr.size(); i += 2) {
+        int64_t min = atoll(seedsStr[i].c_str());
+        int64_t max = min + atoll(seedsStr[i+1].c_str()) - 1;
         seedRange.push_back({min, max});
     }
 
-    uint64_t maxNumSeed = 0;
-    uint64_t minNumSeed = UINT64_MAX;
-    for(const Bounds& seedRan: seedRange) {
+    int64_t maxNumSeed = 0;
+    int64_t minNumSeed = INT64_MAX;
+    for(const Bound& seedRan: seedRange) {
         if(maxNumSeed < seedRan.max)maxNumSeed = seedRan.max;
         if(minNumSeed > seedRan.min)minNumSeed = seedRan.min;
     }
@@ -221,11 +270,11 @@ int main() {
                     exit(1);
                 }
 
-                uint64_t des = atoll(val[0].c_str());
-                uint64_t sou = atoll(val[1].c_str());
-                uint64_t len = atoll(val[2].c_str());
-                Bounds source = {sou, sou+len-1};
-                Bounds dest = {des, des+len-1};
+                int64_t des = atoll(val[0].c_str());
+                int64_t sou = atoll(val[1].c_str());
+                int64_t len = atoll(val[2].c_str());
+                Bound source = {sou, sou+len-1};
+                Bound dest = {des, des+len-1};
 
                 mapData.push_back({source, dest});
             }
@@ -238,9 +287,8 @@ int main() {
    
     
     // Debugging time
-    
     cout << "seeds: ";
-    for(uint64_t seed: seeds) {
+    for(int64_t seed: seeds) {
         cout << seed << " ";
     }
     cout << "\n";
@@ -260,38 +308,9 @@ int main() {
             exit(1);
         }
     }
-
-    // Get maps  total source and dest bounds
-    for(const auto& map: maps) {
-        const string mapID =  map.first;
-        Bounds sourceBounds = {UINT64_MAX-1, 0};
-        Bounds destBounds = {UINT64_MAX-1, 0};
-
-        for(const MapSourceDest& mapSourceDes: map.second) {
-            if(mapSourceDes.source.min < sourceBounds.min)sourceBounds.min = mapSourceDes.source.min;
-            if(mapSourceDes.source.max > sourceBounds.max)sourceBounds.max = mapSourceDes.source.max;
-
-            if(mapSourceDes.destination.min < destBounds.min)destBounds.min = mapSourceDes.destination.min;
-            if(mapSourceDes.destination.max > destBounds.max)destBounds.max = mapSourceDes.destination.max;
-        }
-        mapBounds.insert({mapID, {sourceBounds, destBounds}});
-    }
-
-    for(const auto& mapTotBounds: mapBounds) {
-        cout << "Map " << mapTotBounds.first << ", bounds source: " << mapTotBounds.second.source.min << "," << mapTotBounds.second.source.max <<
-            ". bounds Dest: " << mapTotBounds.second.destination.min << "," << mapTotBounds.second.destination.max << "\n";
-    }
-    
-    /*
-    if(findLowest(maps, 79) != 82 || findLowest(maps, 14) != 43
-         || findLowest(maps, 55) != 86 || findLowest(maps, 13) != 35) {
-        std::cout << "err\n";
-        exit(1);
-    }
-    */
     
 
     cout << "Silver: " << getSilver(maps, seeds) << "\n";
-    cout << "Gold: "  << getGoldReverse(maps, seedRange) << "\n";
+    cout << "Gold: "  << getGold(maps, seedRange) << "\n";
     return 0;
 }
