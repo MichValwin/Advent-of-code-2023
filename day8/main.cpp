@@ -75,35 +75,17 @@ void goRight(vector<string>& keys, const unordered_map<string, MapNode>& mapNode
 
 uint64_t getGold(const string& instructions, const unordered_map<string, MapNode>& mapNodes, const vector<string> nodeStartA) {
     vector<string> keys;
+
+    vector<uint64_t> stepsToReachZ(nodeStartA.size());
     for(size_t i = 0; i < nodeStartA.size(); i++) {
-        keys.push_back(nodeStartA[i]);
-    }
-
-    vector<uint64_t> stepsToReachZ(keys.size());
-    for(size_t i = 0; i < keys.size(); i++) {
-        stepsToReachZ[i] = getStepsToGoZ(keys[i], instructions, mapNodes);
-    }
-
-    vector<vector<uint64_t>> factorsEach(stepsToReachZ.size());
-    for(size_t i = 0; i < stepsToReachZ.size(); i++) {
-
-    }
-
-    vector<double> divs(stepsToReachZ.size());
-    for(size_t i = 0; i < stepsToReachZ.size(); i++) {
-        divs[i] = (double)stepsToReachZ[i] / (double)instructions.length();
-    }
-
-    vector<double> mods(stepsToReachZ.size());
-    for(size_t i = 0; i < stepsToReachZ.size(); i++) {
-        mods[i] = stepsToReachZ[i] % instructions.length();
+        stepsToReachZ[i] = getStepsToGoZ(nodeStartA[i], instructions, mapNodes);
     }
 
     uint64_t mul = 1;
-    for(size_t i = 0; i < divs.size(); i++) {
-        mul *= (divs[i]);
+    for(size_t i = 0; i < stepsToReachZ.size(); i++) {
+        mul *= (stepsToReachZ[i]/instructions.length());
     }
-    mul = mul*instructions.length();
+    mul *= instructions.length();
 
     return mul;
 }
@@ -132,36 +114,27 @@ int main() {
     while(getline(inputFile, line)) {
         if(!line.empty()) {
             if (std::regex_search(line, matches, patternNodes)) {
-                //cout << matches[1] << " = ("<< matches[2] << ", " <<  matches[3] << ")\n";
-                //if(matches.length() == 4) {
+                if(matches.size() == 4) {
                     string key = matches[1];
                     string val1 = matches[2];
                     string val2 = matches[3];
                     MapNode node = {val1, val2};
                     mapNodes.insert({key, node});
-                    /*
                 }else{
-                    cout << "OH NO\n";
+                    cout << "Cannot parse line\n";
                     exit(1);
                 }
-                */
             }
         }
     }
 
-    // Get 
+    // Get all nodes ending in A
     vector<string> nodesEndsA;
     for(const auto& node: mapNodes) {
         if(node.first[node.first.length()-1] == 'A')
             nodesEndsA.push_back(node.first);
     }
 
-    // debug
-    for(const auto& node: mapNodes) {
-        //cout << node.first << " = ("<< node.second.left << ", " <<  node.second.right << ")\n";
-    }
-
-    
 
     cout << "Silver: " << getStepsToGoZ("AAA", instructions, mapNodes) << "\n";
     cout << "Gold: "  << getGold(instructions, mapNodes, nodesEndsA) << "\n";
