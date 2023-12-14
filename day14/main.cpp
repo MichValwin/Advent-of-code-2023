@@ -72,7 +72,7 @@ struct GridChar{
         return false;
     }
 
-    bool isEqual(const GridChar& grid) {
+    bool isEqual(const GridChar& grid) const{
         if(grid.width == width && grid.height == height){
             bool sameGrid = true;
             for(uint32_t y = 0; y < height; y++) {
@@ -151,10 +151,12 @@ uint32_t getGold(const GridChar& grid) {
     uint32_t gold = 0;
     // Copy grid
     GridChar g = grid.copy();
-    const uint32_t TOTAL_CYCLES = 100;
+    const uint32_t TOTAL_CYCLES = 1000000000;
 
     vector<GridChar> gridCopies;
     gridCopies.push_back(g.copy());
+    uint32_t indexFirstRepeated = UINT32_MAX;
+    uint32_t cycle = 0;
 
     for(uint32_t i = 0; i < TOTAL_CYCLES; i++) {
         // Roll north
@@ -166,41 +168,59 @@ uint32_t getGold(const GridChar& grid) {
         // Roll east
         roll(g, {1, 0});
         gridCopies.push_back(g.copy());
-        if(i % 1000 == 0)cout << i << " cycles done\n";
+        
+        // Check if there is a repeated element
+        if(indexFirstRepeated == UINT32_MAX) {
+            for(uint32_t j = 0; j < gridCopies.size(); j++) {
+                for(uint32_t k = 1; k < gridCopies.size()-1; k++) {
+                    if(j != k && gridCopies[j].isEqual(gridCopies[k])) {
+                        indexFirstRepeated = k;
+                    }
+                }
+            }
+        }else{
+            if(gridCopies[indexFirstRepeated].isEqual(g)){
+                cycle++;
+                break; //Found entire cicle
+            }
+            cycle++;
+        }
     }
 
-    vector<pair<uint32_t, uint32_t>> pairsOfIndexGridsThatAreSame;
+    uint32_t indexPeriodToEnd = (TOTAL_CYCLES - indexFirstRepeated) % cycle;
+    indexPeriodToEnd += indexFirstRepeated;
+    GridChar gridFound = gridCopies[indexPeriodToEnd];
 
+
+
+    // Debug
+    /*
     for(uint32_t i = 0; i < gridCopies.size(); i++) {
-        for(uint32_t j = 1; j < gridCopies.size()-1; j++) {
-            if(i != j && gridCopies[i].isEqual(gridCopies[j])){
-                pairsOfIndexGridsThatAreSame.push_back({i, j});
+        gold = 0;
+        for(uint32_t y = 0; y < gridCopies[i].height; y++) {
+            for(uint32_t x = 0; x < gridCopies[i].width; x++) {
+                if(gridCopies[i].map[x + y*gridCopies[i].width] == 'O') {
+                    uint32_t row = gridCopies[i].height - y;
+                    gold += row;
+                }
             }
         }
+        cout << "Gold for index: " << i << ", " << gold << "\n";
     }
+    */
 
-    if(!pairsOfIndexGridsThatAreSame.empty()) {
-        cout << "There are pairs that are equal\n";
-        for(uint32_t i = 0; i < pairsOfIndexGridsThatAreSame.size(); i++) {
-            cout << "Pair: " << "{" << pairsOfIndexGridsThatAreSame[i].first << "," << pairsOfIndexGridsThatAreSame[i].second << "}\n";
-            if(i % 10 == 0)cout << i << " comparisons done\n";
-        }
-    }
-
-    
-
-
-    // Get load
-    for(uint32_t y = 0; y < g.height; y++) {
-        for(uint32_t x = 0; x < g.width; x++) {
-            if(g.map[x + y*g.width] == 'O') {
-                uint32_t row = g.height - y;
+    gold = 0;
+    for(uint32_t y = 0; y < gridFound.height; y++) {
+        for(uint32_t x = 0; x < gridFound.width; x++) {
+            if(gridFound.map[x + y*gridFound.width] == 'O') {
+                uint32_t row = gridFound.height - y;
                 gold += row;
             }
         }
     }
 
     delete[] g.map;
+    for(uint32_t i = 0; i < gridCopies.size(); i++)delete[] gridCopies[i].map;
     return gold;
 }
 
@@ -241,14 +261,6 @@ int main() {
         }
         y++;
     }
-
-    grid.print();
-    /*
-    // Roll north
-    roll(grid, {0, -1});
-    cout << "After moving north\n";
-    grid.print();
-    */
 
     cout << "Silver: " << getSilver(grid) <<  "\n";
     cout << "Gold: " << getGold(grid) << "\n";
