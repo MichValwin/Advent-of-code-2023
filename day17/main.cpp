@@ -141,14 +141,8 @@ struct Node {
 
 struct CompareNodes {
     bool operator()(const Node* l, const Node* r) const {
-        //return l->pos < r->pos || (l->pos == r->pos && l->move < r->move);
-        
-        /**/
         if(l->pos != r->pos) return l->pos < r->pos;
         if(l->move != r->move) return l->move < r->move;
-        //return l->move < r->move;
-        //if(l->numStepSameDir != r->numStepSameDir) return l->numStepSameDir < r->numStepSameDir;
-        //return l->heatLoss < r->heatLoss;
         return l->numStepSameDir < r->numStepSameDir;
     }
 };
@@ -180,15 +174,13 @@ uint32_t getSilver(const GridChar& grid) {
 
         visited.insert(n);
 
-        if(n->pos.x == grid.width-1 && n->pos.y == grid.height-1 && n->numStepSameDir >= 4) {
+        if(n->pos.x == grid.width-1 && n->pos.y == grid.height-1) {
             silver = min(silver, n->heatLoss);
             last = n;
             break;
         }
 
         // Move
-        /*
-
         for(uint8_t i = 0; i < 4; i++) {
             // We cant do 180º 
             if(DIRECTIONS[i].x != -n->move.x || DIRECTIONS[i].y != -n->move.y) {
@@ -215,8 +207,70 @@ uint32_t getSilver(const GridChar& grid) {
                 }
             }
         }
+       
+        
+    }
 
-        */
+
+    // Print to map
+    GridChar g = grid.copy();
+    cout << "\n";
+    while(last->previous != nullptr) {
+        char toPrint = 'O';
+        if(last->move == DIRECTIONS[0]){
+            toPrint = '^';
+        }else if(last->move == DIRECTIONS[1]) {
+            toPrint = '>';
+        }else if(last->move == DIRECTIONS[2]) {
+            toPrint = 'v';
+        }else if(last->move == DIRECTIONS[3]) {
+            toPrint = '<';
+        }
+        g.map[last->pos.x + last->pos.y*g.width] = toPrint;
+        last = last->previous;
+    }
+    g.map[last->pos.x + last->pos.y*g.width] = 'O';
+    g.print();
+
+    for(Node* n: visited) {
+        delete n;
+    }
+    visited.clear();
+
+    delete[] g.map;
+    return silver;
+}
+
+uint32_t getGold(const GridChar& grid) {
+    uint32_t silver = UINT32_MAX;
+
+    set<Node*, CompareNodes> visited;
+    auto compareByHeatLoss = [](const Node* l, const Node* r) {
+        return l->heatLoss > r->heatLoss; 
+    };
+    priority_queue<Node*, vector<Node*>, decltype(compareByHeatLoss)> prioQueue(compareByHeatLoss);
+
+    Node* startNode = new Node({0,0}, {0,0}, 0, 0, nullptr);
+    prioQueue.push(startNode);
+
+    const Node* last;
+    
+    while(!prioQueue.empty()) {
+        Node* n = prioQueue.top();
+        prioQueue.pop();
+
+        // Skip visited ones
+        if(visited.find(n) != visited.end()) {
+            continue; 
+        }
+
+        visited.insert(n);
+
+        if(n->pos.x == grid.width-1 && n->pos.y == grid.height-1 && n->numStepSameDir >= 4) {
+            silver = min(silver, n->heatLoss);
+            last = n;
+            break;
+        }
 
         if(n->numStepSameDir < 10 && (n->move.x != 0 || n->move.y != 0)) {
             Position nP = {n->pos.x + n->move.x, n->pos.y + n->move.y};
@@ -278,6 +332,7 @@ uint32_t getSilver(const GridChar& grid) {
     return silver;
 }
 
+
 int main() {
     // Get input file
     fstream inputFile;
@@ -318,7 +373,7 @@ int main() {
     grid.print();
 
     cout << "Silver: " << getSilver(grid) << "\n";
-    cout << "Gold: " <<  "\n";
+    cout << "Gold: " <<  getGold(grid) << "\n";
 
     return 0;
 }
