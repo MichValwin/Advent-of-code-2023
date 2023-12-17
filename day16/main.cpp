@@ -142,7 +142,6 @@ uint32_t calculateEnergize(const GridChar& grid, Ray ray) {
     
 
     queue<Ray> rays;
-    // Our ray comes from the first position
     rays.push(ray);
 
     set<Ray> raysCalculated;
