@@ -1,17 +1,9 @@
-#include <bitset>
-#include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
-#include <ostream>
 #include <string>
-#include <sys/types.h>
 #include <vector>
-#include <regex>
 #include <unordered_map>
-#include <set>
-#include <cmath>
-#include <queue>
 
 using namespace std;
 
@@ -127,28 +119,6 @@ int64_t getSilver(const unordered_map<string,vector<Condition>>& workflows, cons
     return silver;
 }
 
-PartRange merge(const PartRange& a, const PartRange& b) {
-    PartRange merged;
-    
-    merged.range[0] = {min(a.range[0].first, b.range[0].first), max(a.range[0].second, b.range[0].second)};
-    merged.range[1] = {min(a.range[1].first, b.range[1].first), max(a.range[1].second, b.range[1].second)};
-    merged.range[2] = {min(a.range[2].first, b.range[2].first), max(a.range[2].second, b.range[2].second)};
-    merged.range[3] = {min(a.range[3].first, b.range[3].first), max(a.range[3].second, b.range[3].second)};
-
-    return merged;
-}
-
-PartRange overlap(const PartRange& a, const PartRange& b) {
-    PartRange overlapping;
-    
-    overlapping.range[0] = {min(a.range[0].first, b.range[0].first), max(a.range[0].second, b.range[0].second)};
-    overlapping.range[1] = {min(a.range[1].first, b.range[1].first), max(a.range[1].second, b.range[1].second)};
-    overlapping.range[2] = {min(a.range[2].first, b.range[2].first), max(a.range[2].second, b.range[2].second)};
-    overlapping.range[3] = {min(a.range[3].first, b.range[3].first), max(a.range[3].second, b.range[3].second)};
-
-    return overlapping;
-}
-
 pair<pair<int64_t,int64_t>, pair<int64_t,int64_t>> splitRangeOnOperation(const pair<int64_t,int64_t>& range, const Operation op, int64_t value) {
     pair<int64_t,int64_t> ChecksCondition = {0,0};
     pair<int64_t,int64_t> notChecksCondition = {0,0};
@@ -209,7 +179,6 @@ void putRanges(const unordered_map<string,vector<Condition>>& workflows, vector<
             }
         }
         if(pairRangesAcceptedRejected.second.first != 0) {
-            // Continue with new one
             operateRange.range[indexVal] = pairRangesAcceptedRejected.second; // continue with rejected
         }
     }
@@ -233,8 +202,7 @@ int64_t getGold(const unordered_map<string,vector<Condition>>& workflows) {
     for(uint32_t i = 0; i < acceptedRanges.size(); i++) {
         gold += getCombinations(acceptedRanges[i]);
     }
-
-
+    
     return gold;
 }
 
@@ -306,6 +274,8 @@ int main() {
        
     }
     
+    // Debug
+    /*
     for(const auto& w: workflows) {
         cout << "w: " << w.first << " = {";
         for(const Condition& c: w.second) {
@@ -321,22 +291,7 @@ int main() {
         }
         cout << "}\n";
     }
-    pair<pair<int64_t,int64_t>, pair<int64_t,int64_t>> result;
-    result = splitRangeOnOperation({2344,3453},Operation::LESS_THAN, 200); // not pass, pass all to the next
-    result = splitRangeOnOperation({2344,3453},Operation::LESS_THAN, 2344); // not pass, pass all to next
-    result = splitRangeOnOperation({2344,3453},Operation::LESS_THAN, 2345); // only pass 2344, the rest [2345, 3453] pass to next
-    result = splitRangeOnOperation({2344,3453},Operation::LESS_THAN, 3000);
-    result = splitRangeOnOperation({2344,3453},Operation::LESS_THAN, 3452);
-    result = splitRangeOnOperation({2344,3453},Operation::LESS_THAN, 3453);
-    result = splitRangeOnOperation({2344,3453},Operation::LESS_THAN, 3454);
-
-    result = splitRangeOnOperation({2344,3453},Operation::GREATER_THAN, 200);
-    result = splitRangeOnOperation({2344,3453},Operation::GREATER_THAN, 2344); 
-    result = splitRangeOnOperation({2344,3453},Operation::GREATER_THAN, 2345);
-    result = splitRangeOnOperation({2344,3453},Operation::GREATER_THAN, 3000);
-    result = splitRangeOnOperation({2344,3453},Operation::GREATER_THAN, 3452);
-    result = splitRangeOnOperation({2344,3453},Operation::GREATER_THAN, 3453);
-    result = splitRangeOnOperation({2344,3453},Operation::GREATER_THAN, 3454);
+    */
 
     cout << "Silver: " << getSilver(workflows, parts) <<  "\n";
     cout << "Gold: " <<  getGold(workflows) << "\n";
